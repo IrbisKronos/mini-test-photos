@@ -16,14 +16,14 @@ function App() {
   const [onChangeValue, setOnChangeValue] = useState(''); // пошуковий запит
   const [categoryId, setCategoryId] = useState(0); // 0 - обрати всі категорії
   const [isLoading, setIsLoading] = useState(true); // візуацізація "завантаження"
-
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
+    const category = categoryId ? `category=${categoryId}` : '';
+
     setIsLoading(true);
     fetch(
-      `https://63c86bc5075b3f3a91e09a76.mockapi.io/Photos?${
-        categoryId ? `category=${categoryId}` : ''
-      }`)
+      `https://63c86bc5075b3f3a91e09a76.mockapi.io/Photos?page=${page}&limit=3&${category}`)
       .then((res) => res.json())
       .then((json) => {
         setImages(json);
@@ -33,7 +33,7 @@ function App() {
         alert('Помилка при отриманні даних');
       })
       .finally(() => setIsLoading(false))
-  }, [categoryId]);
+  }, [categoryId, page]);
 
   return (
     <div className="App">
@@ -49,7 +49,10 @@ function App() {
             </li>
           ))}
         </ul>
-        <input onChange={(e) => setOnChangeValue(e.target.value)} className="search-input" placeholder="Пошук по назві" />
+        <input
+          onChange={(e) => setOnChangeValue(e.target.value)}
+          className="search-input"
+          placeholder="Пошук по назві" />
       </div>
       <div className="content">
         {isLoading ? (
@@ -62,9 +65,14 @@ function App() {
             )))}
       </div>
       <ul className="pagination">
-        <li>1</li>
-        <li className="active">2</li>
-        <li>3</li>
+        {[...Array(3)].map((_, index) => (
+          <li
+            onClick={() => setPage(index + 1)}
+            className={page === index + 1 ? 'active' : ''}
+            key={index}>
+            {index + 1}
+          </li>
+        ))}
       </ul>
     </div>
   );
