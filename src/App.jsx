@@ -1,34 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import React from 'react';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import Collection from './Collection';
+
+const categoryNames = [
+  { "name": "Все" },
+  { "name": "Море" },
+  { "name": "Гори" },
+  { "name": "Архітектура" },
+  { "name": "Міста" }
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [images, setImages] = useState([]);
+  const [onChangeValue, setOnChangeValue] = useState(''); // пошуковий запит
+  const [categoryId, setCategoryId] = useState(0); // 0 - обрати всі категорії
+  const [isLoading, setIsLoading] = useState(true); // візуацізація "завантаження"
+
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(
+      `https://63c86bc5075b3f3a91e09a76.mockapi.io/Photos?${
+        categoryId ? `category=${categoryId}` : ''
+      }`)
+      .then((res) => res.json())
+      .then((json) => {
+        setImages(json);
+      })
+      .catch((err) => {
+        console.warn(err);
+        alert('Помилка при отриманні даних');
+      })
+      .finally(() => setIsLoading(false))
+  }, [categoryId]);
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <h1>Моя коллекція фотографій</h1>
+      <div className="top">
+        <ul className="tags">
+          {categoryNames.map((obj, index) => (
+            <li
+              onClick={() => setCategoryId(index)}
+              className={categoryId === index ? 'active' : ''}
+              key={obj.name}>
+              {obj.name}
+            </li>
+          ))}
+        </ul>
+        <input onChange={(e) => setOnChangeValue(e.target.value)} className="search-input" placeholder="Пошук по назві" />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      <div className="content">
+        {isLoading ? (
+          <h2>Завантажується...</h2>
+        ) : (
+          images
+            .filter((obj) => obj.name.toLowerCase().includes(onChangeValue.toLowerCase()))
+            .map((obj, index) => (
+              <Collection key={index} name={obj.name} images={obj.photos} />
+            )))}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <ul className="pagination">
+        <li>1</li>
+        <li className="active">2</li>
+        <li>3</li>
+      </ul>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
